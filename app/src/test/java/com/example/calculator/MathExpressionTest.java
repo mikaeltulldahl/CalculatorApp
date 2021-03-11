@@ -1,24 +1,33 @@
 package com.example.calculator;
 
-import android.icu.text.DecimalFormat;
-import android.widget.Toast;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class EvalTest {
-    private final double eps = 1e-7;
+class MathExpressionTest {
+    private final double eps = 1e-5;
 
     @Test
     void evalExpression() {
         assertEquals(4, 2 + 2);
 
         testStringInput("1+1", 2);
-        testStringInput("-1+1", 0);
-        testStringInput("-1+2*(2+3)", 9);
+        testStringInput("1+2*3", 7);
+        testStringInput("sqrt2", 1.41421356237);
+        testStringInput("sqrt(2)", 1.41421356237);
+        testStringInput("5++", 6);
+        testStringInput("1.3+2*(2+3)", 11.3);
+        testStringInput("1.3+2*(2+3)", 11.3);
+        testStringInput("2^3^2", 512);
+        testStringInput("(2^3)^2", 64);
+        testStringInput("2+3*2^1.5+1", 11.4852813742);
+        testStringInput("2+3^2*1.5+1", 16.5);
+
+
+        //testStringInput("-1+1", 0);
+        //testStringInput("-1+2*(2+3)", 9);
 
         testBadStringInput("(");
         testBadStringInput("abc");
@@ -28,7 +37,7 @@ class EvalTest {
 
     void testStringInput(String input, double expectedResult){
         try {
-            double val = Eval.evalExpression(input);
+            double val = new MathExpression(input).evaluate();
             assertEquals(expectedResult, val, eps);
         }catch (IllegalArgumentException e) {
             Assertions.fail("IllegalArgumentException thrown");
@@ -39,7 +48,7 @@ class EvalTest {
 
     public void testBadStringInput(String badInput) {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            Eval.evalExpression(badInput);
+            new MathExpression(badInput).evaluate();
         });
     }
 }

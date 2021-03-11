@@ -7,6 +7,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -34,21 +35,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void evalButtonClicked(View v){
-        String inputString = input.getText().toString();
+        String inputString = input.getText().toString().replaceAll("\\s","");//remove whitespaces
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                Eval.Value v = Eval.evalExpression(inputString, 0, inputString.length());
-                if (v != null) {
+                try {
+                    double val = new MathExpression(inputString).evaluate();
                     DecimalFormat formatter = new DecimalFormat("0.##");
-                    String newString = String.format("%s = %s", inputString, formatter.format(v.val));
+                    String newString = String.format("%s = %s", inputString, formatter.format(val));
                     if(output.getText().toString().isEmpty()){
                         output.setText(newString);
                     }else{
                         output.append("\n" + newString);
                     }
+                    input.setText(getResources().getString(R.string.empty));
+                }catch (IllegalArgumentException e) {
+                    Toast.makeText(getApplicationContext(),"Invalid input",Toast.LENGTH_SHORT).show();
                 }
-                input.setText(getResources().getString(R.string.empty));
+                catch (NullPointerException e) {
+                    Toast.makeText(getApplicationContext(),"NullPointerException",Toast.LENGTH_SHORT).show();
+                }
             }
         };
         Handler handler = new Handler();
