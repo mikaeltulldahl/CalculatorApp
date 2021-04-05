@@ -24,7 +24,7 @@ class MathExpressionTest {
         testStringInput("(2^3)^2", 64);
         testStringInput("2+3*2^1.5+1", 11.4852813742);
         testStringInput("2+3^2*1.5+1", 16.5);
-
+        testStringInput("sqrt(sqrt(5^4))", 5);
 
         //testStringInput("-1+1", 0);
         //testStringInput("-1+2*(2+3)", 9);
@@ -33,6 +33,8 @@ class MathExpressionTest {
         testBadStringInput("abc");
         testBadStringInput(" ");
         testBadStringInput("");
+        testBadStringInput("(4 + 2");
+        testBadStringInput("(4 + 2))");
     }
 
     void testStringInput(String input, double expectedResult){

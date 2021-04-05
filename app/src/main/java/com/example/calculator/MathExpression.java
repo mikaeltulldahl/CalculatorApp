@@ -24,7 +24,9 @@ public class MathExpression {
             tokenList.add(t);
             t = getNextToken(t.end);
         }
-        evalExpressionHelper2(getOperator(tokenList.head),0);
+        if(tokenList.head != null) {
+            evaluateHelper(tokenList.head.getOperator(), 0);
+        }
         if(tokenList.head == null || tokenList.head != tokenList.tail || tokenList.head.isOperator()){
             throw new IllegalArgumentException("invalid input");
         }
@@ -34,17 +36,17 @@ public class MathExpression {
     /*
      * inspired by https://en.wikipedia.org/wiki/Operator-precedence_parser#Pseudocode
      */
-    private void evalExpressionHelper2(Token lookAheadOp, int min_precedence) {
-        while(lookAheadOp != null && lookAheadOp.operator.precedence >= min_precedence) {// lookAheadOp is a binary operator whose precedence is >=min_precedence
+    private void evaluateHelper(Token lookAheadOp, int min_precedence) {
+        while(lookAheadOp != null && lookAheadOp.operator.precedence >= min_precedence) {
             Token op = lookAheadOp;
-            lookAheadOp = getNextOperator(op);//peek next operator
+            lookAheadOp = op.getNextOperator();//peek next operator
             //TODO unary operators
             while(doLookAheadFirst(lookAheadOp, op)) {
                 int precedenceInc = lookAheadOp.operator.leftAssociate ? 1 : 0;
-                evalExpressionHelper2(lookAheadOp, op.operator.precedence + precedenceInc);
-                lookAheadOp = getNextOperator(lookAheadOp);//peek next operator
+                evaluateHelper(lookAheadOp, op.operator.precedence + precedenceInc);
+                lookAheadOp = lookAheadOp.getNextOperator();//peek next operator
             }
-            execute((Token)op.previous, op, (Token)op.next);//the result of applying op with operands lhs and rhs
+            execute(op);
         }
     }
 
@@ -52,36 +54,10 @@ public class MathExpression {
         if(lookAheadOp == null){
             return false;
         }
-
-        //lookAheadOp is a binary operator whose precedence is greater than op 's
         if(lookAheadOp.operator.precedence > op.operator.precedence) {
             return true;
         }
-
-        //TODO should we really be looking at lookAheads's associativity?
-        // or lookAheadOp is a right-associative operator whose precedence is equal to op 's
-        return lookAheadOp.operator.precedence == op.operator.precedence && !lookAheadOp.operator.leftAssociate;
-    }
-
-    /*
-     * finds the next operator after t
-     */
-    private Token getNextOperator(Token t){
-        if(t != null) {
-            return getOperator((Token) t.next);
-        }else{
-            return null;
-        }
-    }
-
-    /*
-     * finds the next operator including t
-     */
-    private Token getOperator(Token t){
-        while (t != null && !t.isOperator()) {
-            t = (Token) t.next;
-        }
-        return t;
+        return lookAheadOp.operator.precedence == op.operator.precedence && !op.operator.leftAssociate;
     }
 
     /*
@@ -96,8 +72,8 @@ public class MathExpression {
             switch(s.charAt(start)){
                 case '(':
                     Token v  = (new MathExpression(s)).evaluate2(start + 1);
-                    v.end = v.end + 1;
-                    if(v.end <= s.length() && s.charAt(v.end - 1) == ')'){
+                    if(v.end < s.length() && s.charAt(v.end) == ')'){
+                        v.end++;
                         return v;
                     }
                     return null;
@@ -132,19 +108,19 @@ public class MathExpression {
         MUL("*", 2, true,true,true){ public double execute(double lhs, double rhs) { return lhs * rhs; }},
         DIV("/", 2, true,true,true){ public double execute(double lhs, double rhs) { return lhs / rhs; }},
         EXP("^",3, false,true,true){ public double execute(double lhs, double rhs) { return Math.pow(lhs, rhs); }},
-        SQRT("sqrt",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.sqrt(rhs); }},
-        SIN("sin",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.sin(rhs); }},
-        COS("cos",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.cos(rhs); }},
-        TAN("tan",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.tan(rhs); }},
-        ASIN("asin",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.asin(rhs); }},
-        ACOS("acos",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.acos(rhs); }},
-        ATAN("atan",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.atan(rhs); }},
-        LOG("log",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.log(rhs); }},
-        LOG10("log10",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.log10(rhs); }},
-        ABS("abs",1, true,false,true){ public double execute(double lhs, double rhs) { return Math.abs(rhs); }},
-        RAND("rand",1, true,false,false){ public double execute(double lhs, double rhs) { return Math.random(); }},
-        MOD("%",1, true,true,true){ public double execute(double lhs, double rhs) { return lhs % rhs; }},
-        PI("pi",10, true,false,false){ public double execute(double lhs, double rhs) { return Math.PI; }};
+        SQRT("sqrt",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.sqrt(rhs); }},
+        SIN("sin",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.sin(rhs); }},
+        COS("cos",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.cos(rhs); }},
+        TAN("tan",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.tan(rhs); }},
+        ASIN("asin",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.asin(rhs); }},
+        ACOS("acos",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.acos(rhs); }},
+        ATAN("atan",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.atan(rhs); }},
+        LOG10("log10",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.log10(rhs); }},
+        LOG("log",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.log(rhs); }},
+        ABS("abs",10, false,false,true){ public double execute(double lhs, double rhs) { return Math.abs(rhs); }},
+        RAND("rand",11, true,false,false){ public double execute(double lhs, double rhs) { return Math.random(); }},
+        MOD("%",2, true,true,true){ public double execute(double lhs, double rhs) { return lhs % rhs; }},
+        PI("pi",11, true,false,false){ public double execute(double lhs, double rhs) { return Math.PI; }};
 
         public final String type;
         public final int precedence;
@@ -174,15 +150,17 @@ public class MathExpression {
         public abstract double execute(double lhs, double right);
     }
 
-    private void execute(Token lhs, Token op, Token rhs) {
+    private void execute(Token op) {
         //consume lhs & rhs
         double lhsVal = 0;
         double rhsVal = 0;
         if(op.operator.consumesLHS){
+            Token lhs = (Token)op.previous;
             lhsVal = lhs.val;
             tokenList.remove(lhs);
         }
         if(op.operator.consumesRHS){
+            Token rhs = (Token)op.next;
             rhsVal = rhs.val;
             op.end = rhs.end;
             tokenList.remove(rhs);
@@ -222,6 +200,28 @@ public class MathExpression {
             }else{
                 return "Val: " + val;
             }
+        }
+
+        /*
+         * finds the next operator after this
+         */
+        private Token getNextOperator(){
+            if(next != null) {
+                return ((Token)next).getOperator();
+            }else{
+                return null;
+            }
+        }
+
+        /*
+         * finds the next operator including this
+         */
+        private Token getOperator(){
+            Token t = this;
+            while (t != null && !t.isOperator()) {
+                t = (Token) t.next;
+            }
+            return t;
         }
     }
 }

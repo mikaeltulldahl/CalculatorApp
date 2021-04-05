@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 try {
                     double val = new MathExpression(inputString).evaluate();
-                    DecimalFormat formatter = new DecimalFormat("0.##");
+                    DecimalFormat formatter = new DecimalFormat("@####");
                     String newString = String.format("%s = %s", inputString, formatter.format(val));
                     if(output.getText().toString().isEmpty()){
                         output.setText(newString);
